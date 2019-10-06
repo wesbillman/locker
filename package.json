@@ -1,0 +1,16 @@
+{
+  "name": "locker",
+  "version": "0.0.1",
+  "description": "A nice place to store iOS frameworks",
+  "main": "index.js",
+  "scripts": {},
+  "bin": {
+    "locker": "bin/locker"
+  },
+  "keywords": [
+    "iOS",
+    "frameworks"
+  ],
+  "author": "wes.billman@gmail.com",
+  "license": "MIT"
+}
