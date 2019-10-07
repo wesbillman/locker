@@ -2,7 +2,7 @@ import program from 'commander'
 import chalk from 'chalk'
 import yaml from 'js-yaml'
 import fs from 'fs-extra'
-import os from 'os'
+import lockers from './lockers'
 
 const log = console.log;
 
@@ -10,12 +10,12 @@ program.version('0.0.1')
 program.command('pull')
   .description('Pull down dependecies from your lockers')
   .action(() => {
-    localPull(getDoc())
+    lockers.local.pull(getDoc())
   })
 program.command('push')
   .description('Push up local changes to your lockers')
   .action(() => {
-    localPush(getDoc())
+    lockers.local.push(getDoc())
   })
 program.option('-f, --file <path>', 'Lockerfile path')
 program.on('command:*', function () {
@@ -40,41 +40,7 @@ function validate(doc) {
   }
 }
 
-function localPull(doc) {
-  log(chalk.blue('Getting gear out of your locker'))
-  let localPath = getLocalPath(doc)
-  if (!localPath) {
-    return
-  }
 
-  doc.gear.directories.forEach(element => {
-    log(`dir  - ${chalk.green(element)}`)
-  });
-
-  doc.gear.files.forEach(element => {
-    log(`file - ${chalk.green(element)}`)
-  });
-}
-
-function localPush(doc) {
-  log(chalk.blue('Putting gear in your locker'))
-  let localPath = getLocalPath(doc)
-  if (!localPath) {
-    return
-  }
-
-  doc.gear.directories.forEach(element => {
-    process.stdout.write(`putting ${chalk.green(element)} in your locker...`)
-    fs.copySync(element, `${localPath}/${element}`)
-    log('✅')
-  });
-
-  doc.gear.files.forEach(element => {
-    process.stdout.write(`putting ${chalk.green(element)} in your locker...`)
-    fs.copySync(element, `${localPath}/${element}`)
-    log('✅')
-  });
-}
 
 function getDoc() {
   let lockerfile = 'Lockerfile'
@@ -95,16 +61,6 @@ function getDoc() {
   }
 
   validate(doc)
-}
-
-function getLocalPath(doc) {
-  let localPath = doc.lockers.local.replace(/^~/, os.homedir());
-  localPath = `${localPath}/${doc.team}`
-  if (!fs.existsSync(localPath)) {
-    fs.mkdirSync(localPath)
-    log(chalk.green(`${localPath} created for local storage`))
-  }
-  return localPath
 }
 
 export function cli(args) {
