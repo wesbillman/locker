@@ -10,12 +10,16 @@ program.version('0.0.1')
 program.command('pull')
   .description('Pull down dependecies from your lockers')
   .action(() => {
-    lockers.local.pull(getDoc())
+    const doc = getDoc()
+    lockers.local.pull(doc)
+    lockers.s3.pull(doc)
   })
 program.command('push')
   .description('Push up local changes to your lockers')
   .action(() => {
-    lockers.local.push(getDoc())
+    const doc = getDoc()
+    lockers.local.push(doc)
+    lockers.s3.push(doc)
   })
 program.option('-f, --file <path>', 'Lockerfile path')
 program.on('command:*', function () {

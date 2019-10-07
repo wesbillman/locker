@@ -15,5 +15,4 @@ gear:
     - Vendor
   files:
     - codecov.yml
-
 ```

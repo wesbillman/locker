@@ -4,11 +4,13 @@ import os from 'os'
 const log = console.log;
 
 function push(doc) {
-  log(`Putting gear in your ${chalk.magenta('local')} locker`)
   let localPath = getLocalPath(doc)
   if (!localPath) {
     return
   }
+
+  log(`Putting gear in your ${chalk.magenta('local')} locker`)
+  log(chalk.gray(localPath))
 
   doc.gear.directories.forEach(element => {
     process.stdout.write(`Pushing dir  - ${chalk.green(element)}...`)
@@ -26,11 +28,11 @@ function push(doc) {
 }
 
 function pull(doc) {
-  log(`Getting gear out of your ${chalk.magenta('local')} locker`)
   let localPath = getLocalPath(doc)
   if (!localPath) {
     return
   }
+  log(`Getting gear out of your ${chalk.magenta('local')} locker`)
   log(chalk.gray(localPath))
 
   doc.gear.directories.forEach(element => {
@@ -52,6 +54,9 @@ function pull(doc) {
 export default {pull, push}
 
 function getLocalPath(doc) {
+  if (!doc.lockers.local) {
+    return null
+  }
   let localPath = doc.lockers.local.replace(/^~/, os.homedir());
   localPath = `${localPath}/${doc.team}`
   if (!fs.existsSync(localPath)) {
