@@ -28,8 +28,8 @@ program.on('command:*', function () {
 })
 
 function validate(doc) {
-  if (!doc.team) {
-    log(chalk.red('Lockerfile must specify a "team"'))
+  if (!doc.version) {
+    log(chalk.red('Lockerfile must specify a "version"'))
     process.exit(1)
   }
 

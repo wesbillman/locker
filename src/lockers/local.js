@@ -4,61 +4,56 @@ import os from 'os'
 const log = console.log;
 
 function push(doc) {
-  let localPath = getLocalPath(doc)
-  if (!localPath) {
+  let lockerPath = getLockerPath(doc)
+  if (!lockerPath) {
     return
   }
 
   log(`Putting gear in your ${chalk.magenta('local')} locker`)
-  log(chalk.gray(localPath))
+  log(chalk.gray(lockerPath))
 
-  doc.gear.directories.forEach(element => {
-    process.stdout.write(`Pushing dir  - ${chalk.green(element)}...`)
-    verifyExists(element, 'directory', 'push')
-    fs.copySync(element, `${localPath}/${element}`)
-    log(chalk.green('✓'))
-  });
-
-  doc.gear.files.forEach(element => {
-    process.stdout.write(`Pushing file - ${chalk.green(element)}...`)
-    verifyExists(element, 'file', 'push')
-    fs.copySync(element, `${localPath}/${element}`)
+  const allPaths = (doc.gear.folders || []).concat(doc.gear.files || [])
+  allPaths.forEach(source => {
+    process.stdout.write(`Pushing - ${chalk.magenta(source)}...`)
+    verifyExists(source, 'push')
+    fs.copySync(source, `${lockerPath}/${source}`)
     log(chalk.green('✓'))
   });
 }
 
 function pull(doc) {
-  let localPath = getLocalPath(doc)
-  if (!localPath) {
+  let lockerPath = getLockerPath(doc)
+  if (!lockerPath) {
     return
   }
   log(`Getting gear out of your ${chalk.magenta('local')} locker`)
-  log(chalk.gray(localPath))
+  log(chalk.gray(lockerPath))
 
-  doc.gear.directories.forEach(element => {
-    process.stdout.write(`Pulling dir  - ${chalk.green(element)}...`)
-    verifyExists(`${localPath}/${element}`, 'directory', 'pull')
-    fs.removeSync(element)
-    fs.copySync(`${localPath}/${element}`, element)
-    log(chalk.green('✓'))
-  });
+  const allPaths = (doc.gear.folders || []).concat(doc.gear.files || [])
+  allPaths.forEach(destination => {
+    process.stdout.write(`Pulling - ${chalk.magenta(destination)}...`)
+    const source = `${lockerPath}/${destination}`
+    verifyExists(source, 'pull')
 
-  doc.gear.files.forEach(element => {
-    process.stdout.write(`Pulling file - ${chalk.green(element)}...`)
-    verifyExists(`${localPath}/${element}`, 'file', 'pull')
-    fs.copySync(`${localPath}/${element}`, element)
+    const stats = fs.lstatSync(source)
+
+    if (stats.isDirectory()) {
+      fs.removeSync(destination)
+    }
+
+    fs.copySync(source, destination)
     log(chalk.green('✓'))
   });
 }
 
 export default {pull, push}
 
-function getLocalPath(doc) {
+function getLockerPath(doc) {
   if (!doc.lockers.local) {
     return null
   }
   let localPath = doc.lockers.local.replace(/^~/, os.homedir());
-  localPath = `${localPath}/${doc.team}`
+  localPath = `${localPath}/${doc.version}`
   if (!fs.existsSync(localPath)) {
     fs.mkdirSync(localPath)
     log(chalk.green(`${localPath} created for local storage`))
@@ -66,10 +61,10 @@ function getLocalPath(doc) {
   return localPath
 }
 
-function verifyExists(element, type, action) {
+function verifyExists(element, action) {
   if (!fs.existsSync(element)) {
     log('')
-    log(chalk.red(`ERROR - cannot ${action} ${type} ${element}. ${element} does not exist.`))
+    log(chalk.red(`ERROR - cannot ${action} ${element}. ${element} does not exist.`))
     process.exit(1)
   }
 }
