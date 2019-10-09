@@ -1,12 +1,24 @@
 import chalk from 'chalk'
 import fs from 'fs-extra'
 import os from 'os'
+import trash from 'trash'
+
 const log = console.log;
 
-function push(doc) {
+async function push(doc, force) {
   let lockerPath = getLockerPath(doc)
   if (!lockerPath) {
     return
+  }
+
+  if (!fs.existsSync(lockerPath) || force) {
+    await trash(lockerPath)
+    fs.mkdirSync(lockerPath)
+    log(chalk.green(`${lockerPath} created for local storage`))
+  } else {
+    log(chalk.red(`Locker already exist at: ${lockerPath}`))
+    log('Use "locker push -f" to overwrite')
+    process.exit(1)
   }
 
   log(`Putting gear in your ${chalk.magenta('local')} locker`)
@@ -26,6 +38,13 @@ function pull(doc) {
   if (!lockerPath) {
     return
   }
+
+  if (!fs.existsSync(lockerPath)) {
+    log(chalk.red(`Locker not found at: ${lockerPath}`))
+    log('Make sure you push updates to a new locker before trying to pull')
+    process.exit(1)
+  }
+
   log(`Getting gear out of your ${chalk.magenta('local')} locker`)
   log(chalk.gray(lockerPath))
 
@@ -53,12 +72,7 @@ function getLockerPath(doc) {
     return null
   }
   let localPath = doc.lockers.local.replace(/^~/, os.homedir());
-  localPath = `${localPath}/${doc.version}`
-  if (!fs.existsSync(localPath)) {
-    fs.mkdirSync(localPath)
-    log(chalk.green(`${localPath} created for local storage`))
-  }
-  return localPath
+  return `${localPath}/${doc.version}`
 }
 
 function verifyExists(element, action) {

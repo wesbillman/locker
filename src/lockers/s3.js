@@ -5,17 +5,24 @@ import execa from 'execa'
 const log = console.log
 const s3 = new aws.S3()
 
-async function push(doc) {
+async function push(doc, force) {
   const bucket = doc.lockers.s3
   if (!bucket) {
     return
   }
 
-  log(`Putting gear in your ${chalk.magenta('s3')} locker`)
-  log(chalk.gray(bucket))
-
   verify3Access(bucket)
   const basePath = getBasePath(doc)
+
+  const exists = await objectExists(bucket, basePath)
+  if(exists && !force) {
+    log(chalk.red(`Locker already exist at: ${bucket}/${basePath}`))
+    log('Use "locker push -f" to overwrite')
+    process.exit(1)
+  }
+
+  log(`Putting gear in your ${chalk.magenta('s3')} locker`)
+  log(chalk.gray(bucket))
 
   for (const path of getAllGear(doc)) {
     log(`Pushing - ${chalk.magenta(path.path)}...`)
@@ -66,6 +73,12 @@ async function pull(doc) {
 
 async function verify3Access(bucket) {
   await s3.listObjectsV2({Bucket: bucket}).promise()
+}
+
+async function objectExists(bucket, key) {
+  const result = await s3.listObjectsV2({Bucket: bucket, Prefix: key}).promise()
+  log(result.Contents.length > 0)
+  return result.Contents.length > 0
 }
 
 function getBasePath(doc) {

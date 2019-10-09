@@ -21,7 +21,8 @@
     "execa": "^2.0.5",
     "fs-extra": "^8.1.0",
     "js-yaml": "^3.13.1",
-    "mime": "^2.4.4"
+    "mime": "^2.4.4",
+    "trash": "^6.0.0"
   },
   "devDependencies": {
     "eslint": "^6.5.1"
