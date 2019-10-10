@@ -1,7 +1,4 @@
-
-import chalk from 'chalk'
 import fs from 'fs-extra'
-import os from 'os'
 
 const log = console.log
 const versionFilePath = '.lockerversion'
