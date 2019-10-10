@@ -3,6 +3,7 @@ import chalk from 'chalk'
 import yaml from 'js-yaml'
 import fs from 'fs-extra'
 import lockers from './lockers'
+import version from './utils/version'
 
 const log = console.log;
 
@@ -14,10 +15,13 @@ program.command('init')
   })
 program.command('pull')
   .description('Pull down dependecies from your lockers')
-  .action(() => {
+  .option('-f, --force', 'force pull a new version even if you already have that version locally', false)
+  .action((cmd) => {
     const doc = getDoc()
+    version.checkVersion(doc, cmd.force)
     lockers.local.pull(doc)
     lockers.s3.pull(doc)
+    version.createVersionFile(doc)
   })
 program.command('push')
   .description('Push up local changes to your lockers')
@@ -26,6 +30,7 @@ program.command('push')
     const doc = getDoc()
     lockers.local.push(doc, cmd.force)
     lockers.s3.push(doc, cmd.force)
+    version.createVersionFile(doc)
   })
 program.option('-p, --path <filepath>', 'Lockerfile path')
 program.on('command:*', function () {
@@ -102,7 +107,10 @@ gear:
       return
     }
 
-    log(`${chalk.green('✓')} Lockerfile created!`);
+    log('')
+    log('locker initialize!')
+    log('You probably want to add .lockerversion to your .gitignore file')
+    log('')
   });
 }
 
