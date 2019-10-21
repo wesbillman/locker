@@ -86,13 +86,19 @@ function getBasePath(doc) {
 }
 
 function getAllGear(doc) {
-  const folders = doc.gear.folders.map((element) => {
-    return {path: element, isFolder: true}
-  }) || []
+  let folders = []
+  if (doc.gear.folders) {
+    folders = doc.gear.folders.map((element) => {
+      return {path: element, isFolder: true}
+    }) || []
+  }
 
-  const files = doc.gear.files.map((element) => {
-    return {path: `${element}`, isFolder: false}
-  }) || []
+  let files = []
+  if (doc.gear.files) {
+    files = doc.gear.files.map((element) => {
+      return {path: `${element}`, isFolder: false}
+    }) || []
+  }
 
   return folders.concat(files)
 }
