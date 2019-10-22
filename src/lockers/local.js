@@ -2,6 +2,7 @@ import chalk from 'chalk'
 import fs from 'fs-extra'
 import os from 'os'
 import trash from 'trash'
+import compression from '../utils/compression'
 
 const log = console.log;
 
@@ -25,15 +26,19 @@ async function push(doc, force) {
   log(chalk.gray(lockerPath))
 
   const allPaths = (doc.gear.folders || []).concat(doc.gear.files || [])
-  allPaths.forEach(source => {
-    process.stdout.write(`Pushing - ${chalk.magenta(source)}...`)
+  for (const source of allPaths) {
     verifyExists(source, 'push')
-    fs.copySync(source, `${lockerPath}/${source}`)
+    process.stdout.write(`Compressing - ${chalk.magenta(source)}...`)
+    const result = await compression.zip(source);
     log(chalk.green('✓'))
-  });
+
+    process.stdout.write(`Pushing - ${chalk.magenta(source)}...`)
+    fs.copySync(result, `${lockerPath}/${source}.zip`)
+    log(chalk.green('✓'))
+  }
 }
 
-function pull(doc) {
+async function pull(doc) {
   let lockerPath = getLockerPath(doc)
   if (!lockerPath) {
     return
@@ -49,20 +54,15 @@ function pull(doc) {
   log(chalk.gray(lockerPath))
 
   const allPaths = (doc.gear.folders || []).concat(doc.gear.files || [])
-  allPaths.forEach(destination => {
+
+  for (const destination of allPaths) {
     process.stdout.write(`Pulling - ${chalk.magenta(destination)}...`)
-    const source = `${lockerPath}/${destination}`
+    const source = `${lockerPath}/${destination}.zip`
     verifyExists(source, 'pull')
-
-    const stats = fs.lstatSync(source)
-
-    if (stats.isDirectory()) {
-      fs.removeSync(destination)
-    }
-
-    fs.copySync(source, destination)
+    await trash(destination)
+    await compression.unzip(source, destination)
     log(chalk.green('✓'))
-  });
+  }
 }
 
 export default {pull, push}
