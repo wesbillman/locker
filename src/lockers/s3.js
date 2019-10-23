@@ -85,7 +85,6 @@ async function verify3Access(bucket) {
 
 async function objectExists(bucket, key) {
   const result = await s3.listObjectsV2({Bucket: bucket, Prefix: key}).promise()
-  log(result.Contents.length > 0)
   return result.Contents.length > 0
 }
 
