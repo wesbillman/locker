@@ -1,6 +1,10 @@
 import chalk from 'chalk'
 import aws from 'aws-sdk'
 import execa from 'execa'
+import compression from '../utils/compression'
+import os from 'os'
+import uuidv5 from 'uuid/v5'
+import trash from 'trash'
 
 const log = console.log
 const s3 = new aws.S3()
@@ -24,17 +28,17 @@ async function push(doc, force) {
   log(`Putting gear in your ${chalk.magenta('s3')} locker`)
   log(chalk.gray(bucket))
 
-  for (const path of getAllGear(doc)) {
-    log(`Pushing - ${chalk.magenta(path.path)}...`)
-    const s3Path = `${bucket}/${basePath}/${path.path}`
+  for (const source of getAllGear(doc)) {
+    process.stdout.write(`Compressing - ${chalk.magenta(source.path)}...`)
+    const result = await compression.zip(source.path);
+    log(chalk.green('✓'))
 
-    const args = ['s3', 'cp', path.path, `s3://${s3Path}`]
-    if (path.isFolder) {
-      args.push('--recursive')
-    }
-    const { stderr } = await execa('aws', args, {stdio: 'inherit'});
+    log(`Pushing - ${chalk.magenta(source.path)}...`)
+    const s3Path = `${bucket}/${basePath}/${source.path}.zip`
+
+    const { stderr } = await execa('aws', ['s3', 'cp', result, `s3://${s3Path}`], {stdio: 'inherit'});
     if (stderr) {
-      log(chalk.red(`ERROR - Failed to push ${path.path}`))
+      log(chalk.red(`ERROR - Failed to push ${source.path}`))
       process.exit(1)
     }
   }
@@ -57,15 +61,19 @@ async function pull(doc) {
 
     const s3Path = `${bucket}/${basePath}/${path.path}`
 
-    const args = ['s3', 'cp', `s3://${s3Path}`, path.path]
-    if (path.isFolder) {
-      args.push('--recursive')
-    }
+    const filename = uuidv5(path.path, uuidv5.URL)
+    const downloadPath = `${os.tmpdir()}/${filename}.zip`
+    const args = ['s3', 'cp', `s3://${s3Path}.zip`, downloadPath]
     const { stderr } = await execa('aws', args, {stdio: 'inherit'});
     if (stderr) {
       log(chalk.red(`ERROR - Failed to push ${path.path}`))
       process.exit(1)
     }
+
+    process.stdout.write(`Uncompressing - ${chalk.magenta(path.path)}...`)
+    await trash(path.path)
+    await compression.unzip(downloadPath)
+    log(chalk.green('✓'))
   }
 
   log(`${chalk.green('✓')} Pull Successful ${chalk.green('✓')}`)
