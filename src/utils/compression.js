@@ -1,6 +1,9 @@
+import chalk from 'chalk'
 import execa from 'execa'
 import os from 'os'
 import uuidv5 from 'uuid/v5'
+
+const log = console.log;
 
 async function zip(source) {
   const filename = uuidv5(source, uuidv5.URL)
@@ -10,7 +13,12 @@ async function zip(source) {
 }
 
 async function unzip(source) {
-    await execa('unzip', [source], {stdio: 'ignore'})
+  try {
+    await execa('unzip', ['-o', source], {stdio: 'ignore'})
+  } catch (error) {
+    log(chalk.red(`ERROR - ${error}`))
+  }
+
 }
 
 export default {zip, unzip}
