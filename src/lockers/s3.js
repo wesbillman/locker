@@ -3,7 +3,7 @@ import aws from 'aws-sdk'
 import execa from 'execa'
 import compression from '../utils/compression'
 import os from 'os'
-import uuidv5 from 'uuid/v5'
+import { v4 as uuidv4 } from 'uuid';
 import trash from 'trash'
 
 const log = console.log
@@ -61,7 +61,7 @@ async function pull(doc) {
 
     const s3Path = `${bucket}/${basePath}/${path.path}`
 
-    const filename = uuidv5(path.path, uuidv5.URL)
+    const filename = uuidv4()
     const downloadPath = `${os.tmpdir()}/${filename}.zip`
     const args = ['s3', 'cp', `s3://${s3Path}.zip`, downloadPath]
     const { stderr } = await execa('aws', args, {stdio: 'inherit'});

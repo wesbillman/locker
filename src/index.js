@@ -7,7 +7,7 @@ import version from './utils/version'
 
 const log = console.log;
 
-program.version('0.0.6')
+program.version('0.0.7')
 program.command('init')
   .description('Setup project for locker')
   .action(() => {

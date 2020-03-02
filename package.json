@@ -1,6 +1,6 @@
 {
   "name": "@wesbillman/locker",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A nice place to store iOS frameworks",
   "main": "src/index.js",
   "homepage": "https://github.com/wesbillman/locker",
